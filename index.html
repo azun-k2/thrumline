@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulseline — your heart rate in the Mac menu bar</title>
+<meta name="description" content="Pulseline shows the live reading from a Bluetooth heart rate strap in the macOS menu bar.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<div class="hero">
+  <div class="icon"><span>&#9829;</span></div>
+  <h1>Pulseline</h1>
+  <p class="tagline">Your heart rate, live in the menu bar.</p>
+  <nav class="links">
+    <a href="./">Home</a>
+    <a href="support.html">Support</a>
+    <a href="privacy.html">Privacy policy</a>
+    <a href="mailto:khangazun@gmail.com?subject=Pulseline%20support&body=What%20happened%3A%0A%0A%0AWhat%20I%20expected%20instead%3A%0A%0A%0ADetails%20that%20help%3A%0A-%20macOS%20version%3A%0A-%20Mac%3A%20Apple%20silicon%20or%20Intel%0A-%20Pulseline%20version%20%28Settings%2C%20About%29%3A%0A-%20Heart%20rate%20sensor%20make%20and%20model%3A%0A-%20Does%20the%20sensor%20work%20with%20another%20app%20or%20phone%3F%3A%0A">Email support</a>
+  </nav>
+</div>
+
+
+<section class="card">
+  <h2>What it does</h2>
+  <p>Pulseline connects to a Bluetooth heart rate strap and keeps the reading where you can see it: a heart that beats in time with your own, and the number beside it coloured by training zone. Click it and the session opens up.</p>
+  <ul>
+    <li><strong>A dial marked with your own zones</strong>, so a glance tells you which band you are in.</li>
+    <li><strong>The recent line</strong>, coloured along its length by the zone each reading fell in.</li>
+    <li><strong>Time in zone</strong>, calories, heart rate variability and how far you have come down from the recent peak.</li>
+    <li><strong>A line about what your heart is actually doing</strong>, in plain words rather than numbers.</li>
+  </ul>
+  <p class="note">Requires macOS 14 Sonoma or later. Available in thirty-four languages.</p>
+</section>
+
+<section class="card">
+  <h2>Which sensors work</h2>
+  <p>Any strap or armband that uses the standard Bluetooth Heart Rate Service, which is nearly all of them — chest straps and optical armbands alike. There is no allowlist and no per-device support: if it speaks the standard profile, it works.</p>
+  <p><strong>Apple Watch is not supported.</strong> It does not broadcast the standard Bluetooth heart rate profile, and macOS has no way to read what it records. There is more about this, and about what does work, on the <a href="support.html">support page</a>.</p>
+</section>
+
+<section class="card">
+  <h2>No sensor yet?</h2>
+  <p>There is a worked example built in. Click <em>See how it looks</em> and the app runs on a four-minute session, so you can see exactly what it does before buying a strap. It is clearly labelled the whole time it runs, so a generated figure can never be mistaken for a reading.</p>
+</section>
+
+<section class="card">
+  <h2>Privacy in one paragraph</h2>
+  <p>Pulseline has no network access at all, so your readings could not leave your Mac even if the app tried. There is no account, no analytics and no telemetry. Your zone settings and which sensor you last used are stored in the app's own sandbox container; the history is held in memory and is gone when the app quits. The full <a href="privacy.html">privacy policy</a> says the same thing at greater length.</p>
+</section>
+<footer>
+<p>Pulseline for macOS · <a href="./">Home</a> · <a href="support.html">Support</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:khangazun@gmail.com?subject=Pulseline%20support&body=What%20happened%3A%0A%0A%0AWhat%20I%20expected%20instead%3A%0A%0A%0ADetails%20that%20help%3A%0A-%20macOS%20version%3A%0A-%20Mac%3A%20Apple%20silicon%20or%20Intel%0A-%20Pulseline%20version%20%28Settings%2C%20About%29%3A%0A-%20Heart%20rate%20sensor%20make%20and%20model%3A%0A-%20Does%20the%20sensor%20work%20with%20another%20app%20or%20phone%3F%3A%0A">khangazun@gmail.com</a></p>
+</footer>
+</main>
+</body>
+</html>

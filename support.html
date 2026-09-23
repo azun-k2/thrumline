@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulseline — support</title>
+<meta name="description" content="Help with Pulseline: which heart rate sensors work, why Apple Watch does not, and how to get in touch.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<div class="hero">
+  <div class="icon"><span>&#9829;</span></div>
+  <h1>Pulseline</h1>
+  <p class="tagline">Support</p>
+  <nav class="links">
+    <a href="./">Home</a>
+    <a href="support.html">Support</a>
+    <a href="privacy.html">Privacy policy</a>
+    <a href="mailto:khangazun@gmail.com?subject=Pulseline%20support&body=What%20happened%3A%0A%0A%0AWhat%20I%20expected%20instead%3A%0A%0A%0ADetails%20that%20help%3A%0A-%20macOS%20version%3A%0A-%20Mac%3A%20Apple%20silicon%20or%20Intel%0A-%20Pulseline%20version%20%28Settings%2C%20About%29%3A%0A-%20Heart%20rate%20sensor%20make%20and%20model%3A%0A-%20Does%20the%20sensor%20work%20with%20another%20app%20or%20phone%3F%3A%0A">Email support</a>
+  </nav>
+</div>
+
+
+<section class="card">
+  <h2>Get in touch</h2>
+  <p>Email <a href="mailto:khangazun@gmail.com?subject=Pulseline%20support&body=What%20happened%3A%0A%0A%0AWhat%20I%20expected%20instead%3A%0A%0A%0ADetails%20that%20help%3A%0A-%20macOS%20version%3A%0A-%20Mac%3A%20Apple%20silicon%20or%20Intel%0A-%20Pulseline%20version%20%28Settings%2C%20About%29%3A%0A-%20Heart%20rate%20sensor%20make%20and%20model%3A%0A-%20Does%20the%20sensor%20work%20with%20another%20app%20or%20phone%3F%3A%0A">khangazun@gmail.com</a>. The link opens a message with the details that make a problem quicker to solve already filled in — what happened, what you expected, your macOS version and which sensor you are using.</p>
+  <p class="note">If you would rather not email, a review on the App Store is read too, though it is a slower way to get an answer.</p>
+</section>
+
+<section class="card">
+  <h2>Which sensors work</h2>
+  <p>Pulseline scans for the standard Bluetooth Heart Rate Service. Any sensor that implements it works, and nearly all of them do — chest straps and optical armbands from every maker. There is no list of approved devices.</p>
+  <p>Only the heart rate itself is required. Everything else degrades quietly to a hidden row:</p>
+  <ul>
+    <li><strong>Heart rate variability and beat evenness</strong> need beat-to-beat intervals. Chest straps almost always send them; optical armbands often do not, because optical sensing gives a smoothed rate rather than clean intervals.</li>
+    <li><strong>Skin contact</strong>, <strong>where it is worn</strong> and <strong>battery level</strong> appear only for sensors that report them. "Not reported" and "Not touching skin" are different things.</li>
+    <li><strong>Calories</strong> use the sensor's own figure when it reports one, and otherwise an estimate from your rate, age and weight.</li>
+  </ul>
+
+  <h3>Apple Watch</h3>
+  <p>Apple Watch does not work with Pulseline, and cannot be made to. It does not broadcast the standard Bluetooth heart rate profile, and macOS has no way to read the readings it records — there is no Health framework on the Mac, and an iCloud account does not bridge the gap.</p>
+  <p>Some third-party watchOS apps turn an Apple Watch into a standard Bluetooth heart rate broadcaster. When one of those is running in the foreground, the Watch appears in Pulseline like any other sensor. That is a property of those apps rather than of Pulseline, and the battery cost is real.</p>
+
+  <h3>Older ANT+ sensors</h3>
+  <p>ANT+ is a different radio and a Mac has no receiver for it. A sensor that supports both, as many do, works over its Bluetooth side.</p>
+</section>
+
+<section class="card">
+  <h2>If nothing is found</h2>
+  <ul>
+    <li><strong>Put the strap on.</strong> Most straps do not transmit at all until they are worn, and dry contacts often do not count. A little water on the electrodes is the usual fix.</li>
+    <li><strong>Check nothing else has it.</strong> Most straps hold one Bluetooth connection at a time, so a phone or watch that is already connected will keep the Mac from seeing it at all. Close the other app, or turn its Bluetooth off.</li>
+    <li><strong>Allow Bluetooth.</strong> If the permission was ever declined, the app cannot ask again: System Settings ▸ Privacy &amp; Security ▸ Bluetooth.</li>
+    <li><strong>Try the demonstration.</strong> <em>See how it looks</em> in the panel runs the app on a worked example. If that works and a real strap does not, the problem is the connection rather than the app.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Common questions</h2>
+  <h3>The reading vanished halfway through</h3>
+  <p>A strap that is taken off stops transmitting without disconnecting, so Pulseline clears the reading after eight seconds of silence and the heart goes hollow. It fills again by itself when the strap starts sending.</p>
+
+  <h3>Variability shows a dash</h3>
+  <p>The sensor is not sending beat-to-beat intervals. Most optical armbands do not.</p>
+
+  <h3>My maximum heart rate looks wrong</h3>
+  <p>By default it is estimated from your age, which is a population average give or take ten beats. If you have ever measured your own maximum properly, type it in under Settings ▸ Zones: that number is worth far more than any formula.</p>
+
+  <h3>Is this a medical device?</h3>
+  <p>No. Pulseline displays what a fitness sensor reports. It makes no diagnosis, gives no medical advice, and nothing it shows should be used to diagnose or treat any condition. If you have a concern about your heart, speak to a doctor rather than to a menu bar app.</p>
+</section>
+<footer>
+<p>Pulseline for macOS · <a href="./">Home</a> · <a href="support.html">Support</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:khangazun@gmail.com?subject=Pulseline%20support&body=What%20happened%3A%0A%0A%0AWhat%20I%20expected%20instead%3A%0A%0A%0ADetails%20that%20help%3A%0A-%20macOS%20version%3A%0A-%20Mac%3A%20Apple%20silicon%20or%20Intel%0A-%20Pulseline%20version%20%28Settings%2C%20About%29%3A%0A-%20Heart%20rate%20sensor%20make%20and%20model%3A%0A-%20Does%20the%20sensor%20work%20with%20another%20app%20or%20phone%3F%3A%0A">khangazun@gmail.com</a></p>
+</footer>
+</main>
+</body>
+</html>
