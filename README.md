@@ -1,15 +1,15 @@
-# Pulseline
+# Thrumline
 
-Support pages and privacy policy for **Pulseline**, a macOS menu bar app that
+Support pages and privacy policy for **Thrumline**, a macOS menu bar app that
 shows the live reading from a Bluetooth heart rate strap.
 
-The site is served by GitHub Pages at <https://azun-k2.github.io/pulseline/>:
+The site is served by GitHub Pages at <https://azun-k2.github.io/thrumline/>:
 
 | Page | URL |
 |---|---|
-| Home | <https://azun-k2.github.io/pulseline/> |
-| Support | <https://azun-k2.github.io/pulseline/support.html> |
-| Privacy policy | <https://azun-k2.github.io/pulseline/privacy.html> |
+| Home | <https://azun-k2.github.io/thrumline/> |
+| Support | <https://azun-k2.github.io/thrumline/support.html> |
+| Privacy policy | <https://azun-k2.github.io/thrumline/privacy.html> |
 
 The last two are the support and privacy policy URLs given to App Store
 Connect, so their paths should stay put.
