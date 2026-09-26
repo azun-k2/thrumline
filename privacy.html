@@ -26,9 +26,9 @@
 
 
 <section class="card">
-  <p class="note">Last updated 23 September 2026.</p>
+  <p class="note">Last updated for version 1.1.</p>
   <h2>The short version</h2>
-  <p>Thrumline collects nothing, sends nothing and has no network access. Everything it shows comes from a Bluetooth sensor near you and stays on your Mac.</p>
+  <p>Thrumline collects nothing, sends nothing and has no network access. Everything it shows comes from a Bluetooth sensor near you and stays on your Mac, including any sessions you choose to record.</p>
 </section>
 
 <section class="card">
@@ -46,7 +46,9 @@
 <section class="card">
   <h2>What is stored, and where</h2>
   <p>Inside the app's own sandbox container on your Mac, Thrumline keeps your preferences: your age or measured maximum heart rate, your weight and which of the two calorie formulas to use, the identifier and name of the sensor you last chose, and your display settings.</p>
-  <p>The readings themselves are held in memory only. The chart keeps the window you choose — one minute, five, fifteen or an hour — and the session figures run from when the app started or was last reset. None of it is written to disk, and all of it is gone when Thrumline quits.</p>
+  <p>The live readings are held in memory only. The chart keeps the window you choose — one minute, five, fifteen or an hour — and the figures since the last reset run from when the app started or was last reset. None of that is written to disk, and it is gone when Thrumline quits.</p>
+  <p><strong>Recorded sessions</strong> (version 1.1 and later) are the exception, and only when you record one: Thrumline then keeps that session's heart rate for each second, with its start and end, in the same container, so you can look back at it. It keeps your 50 most recent sessions and removes older ones. You can delete any session at any time, and none of them leaves your Mac unless you export it yourself as a file.</p>
+  <p>If you switch on a zone alert delivered as a notification, macOS asks you for permission to show notifications. The notifications are created on your Mac and are not sent anywhere.</p>
   <p>Deleting the app removes its container and everything in it.</p>
 </section>
 
