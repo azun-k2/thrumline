@@ -14,6 +14,6 @@ The site is served by GitHub Pages at <https://azun-k2.github.io/thrumline/>:
 The last two are the support and privacy policy URLs given to App Store
 Connect, so their paths should stay put.
 
-Support is by email: <khangazun@gmail.com>. Every mail link on the site opens a
+Support is by email: <support@khangazun.com>. Every mail link on the site opens a
 message with a template already in it, because a bug report without the macOS
 version and the make of the sensor takes two more round trips to answer.
