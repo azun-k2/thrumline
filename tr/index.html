@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ BLE göğüs bandından canlı akış · Renk kodlu 5 kalp atış hızı bölgesi</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">Nabzın, canlı olarak menü çubuğunda.</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="Etkileşimli demo: gerçek zamanlı EKG osiloskopu ve nabız bölgesi kaydırıcısı">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">Bölge 1: Dinlenme ve Toparlanma</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 Nabzı Ayarla:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 EKG dalgasının hızlanmasını ve bölge renklerinin değişimini görmek için BPM'i kaydırın</span>
+  </div>
+  <p class="demo-note">Görsel simülasyon. Mac uygulamasında Thrumline nabzınızı menü çubuğunda canlı göstermek için Bluetooth LE bantlarına bağlanır.</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "Bölge 1: Dinlenme ve Toparlanma";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "Bölge 2: Hafif Aerobik";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "Bölge 3: Tempo ve Dayanıklılık";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "Bölge 4/5: Maksimum Anaerobik";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>Uygulamada hazır bir örnek var. <em>Nasıl göründüğüne bak</em> düğmesine tıkla; uygulama dört dakikalık bir antrenman oynatır, böylece kemer almadan önce tam olarak ne yaptığını görürsün. Çalıştığı süre boyunca açıkça etiketlidir, bu yüzden üretilmiş bir değer asla gerçek bir ölçümle karıştırılamaz.</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>Bulut tabanlı fitness uygulamaları ile Thrumline karşılaştırması</h2>
+  <p class="section-lead">Abonelik ücreti olmadan ve sağlık verilerinizi buluta yüklemeden Mac'inizde göğüs bandı hassasiyeti.</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Özellik</th>
+          <th>Bulut Fitness Platformları</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Masaüstünde Görünüm</strong></td>
+          <td>Bilekteki saate veya odanın diğer ucundaki telefona kilitli</td>
+          <td class="highlight-col"><strong>Gerçek zamanlı atan kalp simgesi ve renkli BPM değeri doğrudan menü çubuğunda</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Sensör Hassasiyeti</strong></td>
+          <td>Aralıklı antrenmanlarda gecikme yaşayan optik bilek sensörleri</td>
+          <td class="highlight-col"><strong>Standart Bluetooth LE göğüs bantlarıyla üstün EKG doğruluğu</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Nabız Bölgeleri</strong></td>
+          <td>Aylık ödeme duvarlarının ardına kilitlenmiş katı standart formüller</td>
+          <td class="highlight-col"><strong>Fizyolojinize göre tamamen özelleştirilebilir 5 egzersiz bölgesi</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Veri Dışa Aktarma</strong></td>
+          <td>Kendi dosyalarınızı indirmenizi zorlaştıran kapalı sistemler</td>
+          <td class="highlight-col"><strong>Kaydedilen her antrenmanı tek tıkla açık CSV veya TCX dosyasına aktarın</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Gizlilik</strong></td>
+          <td>Özel biyometrik sağlık verilerini şirket sunucularına yükler</td>
+          <td class="highlight-col"><strong>Mac'inizde %100 yerel: sıfır ağ erişimi, hesap zorunluluğu yok</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>Tek paragrafta gizlilik</h2>
   <p>Thrumline’ın hiçbir ağ erişimi yoktur; uygulama denese bile ölçümlerin Mac’inden çıkamazdı. Hesap, analiz ya da telemetri yoktur. Bölge ayarların ve en son kullandığın algılayıcı, uygulamanın kendi sandbox kapsayıcısında saklanır. Canlı ölçümler yalnızca bellekte tutulur ve uygulamadan çıkınca silinir; yalnızca kaydetmeyi seçtiğin antrenmanlar saklanır, aynı kapsayıcıda, ve bunların herhangi birini uygulamada silebilirsin. Bir antrenmanı kendin dosya olarak dışa aktarmadığın sürece hiçbir şey Mac’inden çıkmaz. Tam <a href="privacy.html">gizlilik politikası</a> aynı şeyi daha ayrıntılı anlatır.</p>

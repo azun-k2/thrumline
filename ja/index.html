@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ 心拍チェストベルトとBLEリアルタイム連携 · 5つの運動強度ゾーンを色分け表示</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">あなたの心拍数を、メニューバーにそのまま。</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="インタラクティブデモ：リアルタイム心電図オシロスコープと心拍ゾーンスライダー">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">ゾーン1：休息・ウォーミングアップ</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 心拍数を調整：</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 BPMスライダーを動かすと、心電図の脈拍速度とゾーン色がリアルタイムに変化します</span>
+  </div>
+  <p class="demo-note">視覚的シミュレーションです。Macアプリ版ではPolar、Garmin、Wahooなどの標準Bluetooth LE心拍ベルトと接続し、メニューバーに表示します。</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "ゾーン1：休息・ウォーミングアップ";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "ゾーン2：有酸素運動・脂肪燃焼";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "ゾーン3：持久力・ペース維持";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "ゾーン4/5：無酸素運動・最大負荷";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>用意された例が組み込まれています。<em>どう見えるか試す</em>をクリックすると、アプリが 4 分間のセッションで動くので、ストラップを買う前にどんなことができるのか正確に確かめられます。動いているあいだはずっとはっきり表示されるので、生成された数値が実際の計測値と取り違えられることはありません。</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>クラウド型フィットネスアプリとThrumlineの比較</h2>
+  <p class="section-lead">健康データをクラウドに預けたり月額課金することなく、胸部ベルトの高精度心拍数をMac画面に直接表示。</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>クラウド型フィットネスアプリ</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>PC画面での確認</strong></td>
+          <td>手元のスマートウォッチや部屋の隅のスマホ画面に縛られる</td>
+          <td class="highlight-col"><strong>Macのメニューバーで鼓動するハートアイコンとゾーン色付きBPMを即確認</strong></td>
+        </tr>
+        <tr>
+          <td><strong>センサーの正確性</strong></td>
+          <td>急な負荷変動やインターバル練習でタイムラグが生じる光学式手首センサー</td>
+          <td class="highlight-col"><strong>医療機器水準の正確性を誇る標準Bluetooth LE胸部心拍計ベルトに対応</strong></td>
+        </tr>
+        <tr>
+          <td><strong>心拍ゾーン設定</strong></td>
+          <td>一律の年齢計算式が固定され、詳細設定は月額有料サブスクの壁の向こう</td>
+          <td class="highlight-col"><strong>個人の運動生理機能に合わせて5段階の強度ゾーンを自由に細かく設定可能</strong></td>
+        </tr>
+        <tr>
+          <td><strong>データのエクスポート</strong></td>
+          <td>囲い込みプラットフォームでログの自由な取り出しが制限・有料化</td>
+          <td class="highlight-col"><strong>記録したすべてのセッションを標準のCSVまたはTCXファイルで1クリック書き出し</strong></td>
+        </tr>
+        <tr>
+          <td><strong>プライバシー</strong></td>
+          <td>極めて私的な心拍バイオメトリクス履歴を企業のクラウドサーバーへ無条件送信</td>
+          <td class="highlight-col"><strong>完全通信なし・Mac本体内のみで完結。アカウント不要で一切の外部送信なし</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>プライバシーをひと言で</h2>
   <p>Thrumline はネットワークにいっさいアクセスしないので、たとえアプリがそうしようとしても、計測値が Mac の外に出ることはありません。アカウントも、解析も、テレメトリもありません。ゾーンの設定と最後に使ったセンサーは、アプリ専用のサンドボックスコンテナに保存されます。ライブの計測値はメモリ上にだけ保持され、アプリを終了すると消えます。保存されるのは、記録すると決めたセッションだけです。同じコンテナに保存され、どのセッションもアプリ内で削除できます。自分でセッションをファイルとして書き出さない限り、何も Mac の外には出ません。<a href="privacy.html">プライバシーポリシー</a>の全文では、同じ内容をさらに詳しく説明しています。</p>

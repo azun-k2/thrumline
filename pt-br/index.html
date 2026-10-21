@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ Transmissão em tempo real de cinta cardíaca BLE · 5 zonas de frequência cardíaca</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">Sua frequência cardíaca, ao vivo na barra de menus.</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="Demonstração interativa: osciloscópio de ECG e controle de zonas cardíacas">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">Zona 1: Repouso e recuperação</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 Ajustar batimentos:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 Ajuste o controle de BPM para ver a onda de ECG acelerar e as cores mudarem</span>
+  </div>
+  <p class="demo-note">Simulação visual. No app para Mac, o Thrumline conecta-se a cintas peitorais Bluetooth LE padrão para exibir sua frequência na barra de menus.</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "Zona 1: Repouso e recuperação";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "Zona 2: Aeróbico leve";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "Zona 3: Resistência de ritmo";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "Zona 4/5: Máximo anaeróbico";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>Há um exemplo pronto embutido. Clique em <em>Ver como fica</em> e o app roda uma sessão de quatro minutos, para você ver exatamente o que ele faz antes de comprar uma cinta. Ele fica claramente identificado o tempo todo, para que um número gerado nunca seja confundido com uma leitura.</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>Plataformas de fitness em nuvem vs Thrumline</h2>
+  <p class="section-lead">Precisão de cinta peitoral direto no seu Mac sem assinaturas nem dados de saúde na nuvem.</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Aspecto</th>
+          <th>Apps de fitness em nuvem</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Visibilidade</strong></td>
+          <td>Confinado ao relógio de pulso ou ao celular do outro lado da sala</td>
+          <td class="highlight-col"><strong>Coração pulsando em tempo real com número de BPM colorido na barra de menus</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Precisão do sensor</strong></td>
+          <td>Sensores ópticos de pulso que sofrem atraso em treinos intervalados</td>
+          <td class="highlight-col"><strong>Alta fidelidade com cintas peitorais Bluetooth LE padrão (Polar, Garmin)</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Zonas de frequência</strong></td>
+          <td>Fórmulas genéricas e engessadas bloqueadas atrás de assinaturas mensais</td>
+          <td class="highlight-col"><strong>5 zonas totalmente personalizáveis de acordo com a sua fisiologia</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Exportar dados</strong></td>
+          <td>Plataformas fechadas que cobram para permitir exportação livre</td>
+          <td class="highlight-col"><strong>Exporte qualquer treino gravado com um clique para arquivos abertos CSV ou TCX</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Privacidade</strong></td>
+          <td>Envia seu histórico biométrico íntimo para servidores corporativos na nuvem</td>
+          <td class="highlight-col"><strong>100% local no seu Mac: zero acesso à rede, sem contas nem rastreamento</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>Privacidade em um parágrafo</h2>
   <p>O Thrumline não tem nenhum acesso à rede, então as suas leituras não poderiam sair do seu Mac nem que o app tentasse. Não há conta, análise de uso nem telemetria. Os ajustes de zonas e o último sensor usado ficam guardados no próprio contêiner sandbox do app. As leituras ao vivo ficam só na memória e somem quando o app é encerrado; são guardadas apenas as sessões que você decidir gravar, no mesmo contêiner, e você pode apagar qualquer uma delas no app. Nada sai do seu Mac, a menos que você mesmo exporte uma sessão como arquivo. A <a href="privacy.html">política de privacidade</a> completa diz o mesmo com mais detalhes.</p>

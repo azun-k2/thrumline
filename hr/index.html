@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ Prijenos uživo s BLE prsnog pojasa · 5 bojom označenih zona pulsa</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">Tvoj puls, uživo u traci izbornika.</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="Interaktivni demo: EKG osciloskop i klizač zona pulsa">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">Zona 1: Odmor i oporavak</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 Podesite puls:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 Pomičite klizač za prikaz ubrzanja EKG vala i promjenu boja zona</span>
+  </div>
+  <p class="demo-note">Vizualna simulacija. U Mac aplikaciji Thrumline se povezuje sa standardnim Bluetooth LE prsnim pojasevima i prikazuje puls u traci izbornika.</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "Zona 1: Odmor i oporavak";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "Zona 2: Lagani aerobni trening";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "Zona 3: Tempo i izdržljivost";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "Zona 4/5: Maksimalni anaerobni napor";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>Ugrađen je gotov primjer. Klikni <em>Pogledaj kako izgleda</em> i aplikacija se pokreće na treningu od četiri minute, pa točno vidiš što radi prije nego što kupiš remen. Cijelo vrijeme dok traje jasno je označen, pa se generirani podatak nikad ne može zamijeniti za pravo očitanje.</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>Fitness aplikacije u oblaku u odnosu na Thrumline</h2>
+  <p class="section-lead">Preciznost prsnog pojasa na zaslonu vašeg Maca bez pretplata i slanja zdravstvenih podataka.</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Značajka</th>
+          <th>Platforme u oblaku</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Radna površina</strong></td>
+          <td>Zaključano na ručnom satu ili telefonu na drugom kraju sobe</td>
+          <td class="highlight-col"><strong>Pulsirajuće srce i obojeni BPM izravno u traci izbornika Maca</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Preciznost senzora</strong></td>
+          <td>Optički senzori na zapešću koji kasne pri promjenama tempa</td>
+          <td class="highlight-col"><strong>Izvrsna preciznost sa standardnim Bluetooth LE prsnim pojasevima</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Zone pulsa</strong></td>
+          <td>Ukočene šablonske formule zaključane iza mjesečnih pretplata</td>
+          <td class="highlight-col"><strong>5 potpuno prilagodljivih zona prema vašoj fiziologiji</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Izvoz podataka</strong></td>
+          <td>Zatvoreni sustavi koji otežavaju preuzimanje datoteka</td>
+          <td class="highlight-col"><strong>Izvezite bilo koji snimljeni trening jednim klikom u CSV ili TCX</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Privatnost</strong></td>
+          <td>Slanje osjetljivih biometrijskih podataka na poslužitelje trećih strana</td>
+          <td class="highlight-col"><strong>100% lokalno na vašem računalu bez pristupa mreži</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>Privatnost u jednom odlomku</h2>
   <p>Thrumline nema nikakav mrežni pristup, pa tvoja očitanja ne bi mogla napustiti tvoj Mac ni kad bi aplikacija to pokušala. Nema računa, analitike ni telemetrije. Postavke zona i senzor koji si zadnji koristio spremaju se u vlastiti sandbox spremnik aplikacije. Očitanja uživo drže se samo u memoriji i nestaju kad zatvoriš aplikaciju; čuvaju se jedino treninzi koje odlučiš snimiti, u istom spremniku, i svaki od njih možeš izbrisati u aplikaciji. Ništa ne napušta tvoj Mac, osim ako sam ne izvezeš trening kao datoteku. Potpuna <a href="privacy.html">pravila o privatnosti</a> govore isto, opširnije.</p>

@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ Živý prenos z BLE hrudného pásu · 5 farebne odlíšených zón tepu</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">Tvoj tep naživo na riadku ponuky.</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="Interaktívna ukážka: EKG osciloskop v reálnom čase a posuvník tepu">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">Zóna 1: Regenerácia a pokoj</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 Upraviť tepovú frekvenciu:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 Posunutím BPM sledujte zrýchlenie EKG vlny a zmenu farieb zón</span>
+  </div>
+  <p class="demo-note">Vizuálna ukážka. V aplikácii pre Mac sa Thrumline pripája k štandardným hrudným pásom Bluetooth LE a ukazuje tep priamo v riadku ponúk.</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "Zóna 1: Regenerácia a pokoj";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "Zóna 2: Ľahký aeróbny tréning";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "Zóna 3: Tempo a vytrvalosť";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "Zóna 4/5: Maximálny anaeróbny výkon";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>Aplikácia má zabudovaný hotový príklad. Klikni na <em>Pozrieť sa, ako to vyzerá</em> a aplikácia prehrá štvorminútový tréning, takže presne uvidíš, čo robí, ešte predtým, ako si pás kúpiš. Počas celého behu je zreteľne označený, takže vygenerovanú hodnotu si nikdy nepomýliš so skutočným meraním.</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>Cloudové fitness aplikácie v porovnaní s Thrumline</h2>
+  <p class="section-lead">Presnosť hrudného pásu priamo na obrazovke Macu bez predplatného a odosielania údajov.</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Vlastnosť</th>
+          <th>Cloudové platformy</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Zobrazenie na ploche</strong></td>
+          <td>Uzamknuté na hodinkách alebo v mobile na druhom konci izby</td>
+          <td class="highlight-col"><strong>Pulzujúce srdce a farebná hodnota BPM priamo v riadku ponúk</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Presnosť snímača</strong></td>
+          <td>Optické senzory na zápästí s oneskorením pri intervaloch</td>
+          <td class="highlight-col"><strong>Špičková presnosť so štandardnými hrudnými pásmi Bluetooth LE</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Tepové zóny</strong></td>
+          <td>Pevné šablónovité vzorce skryté za plateným predplatným</td>
+          <td class="highlight-col"><strong>5 plne prispôsobiteľných zón podľa vašej vlastnej kondície</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Export tréningu</strong></td>
+          <td>Uzavreté systémy brániace voľnému stiahnutiu dát</td>
+          <td class="highlight-col"><strong>Export každého záznamu jedným kliknutím do otvoreného formátu CSV alebo TCX</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Súkromie</strong></td>
+          <td>Odosielanie citlivých zdravotných dát na cudzie servery</td>
+          <td class="highlight-col"><strong>100% na zariadení: žiadny prístup k sieti, žiadne účty</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>Súkromie v jednom odseku</h2>
   <p>Thrumline nemá vôbec žiadny prístup k sieti, takže tvoje merania by nemohli opustiť Mac, ani keby sa o to aplikácia pokúsila. Nie je tu žiadny účet, žiadna analytika ani telemetria. Nastavenia zón a naposledy použitý snímač sa ukladajú vo vlastnom kontajneri sandboxu aplikácie. Živé merania sa držia iba v pamäti a po ukončení aplikácie zmiznú; uchovávajú sa len tréningy, ktoré sa rozhodneš nahrať, v tom istom kontajneri, a ktorýkoľvek z nich môžeš v aplikácii vymazať. Nič neopustí tvoj Mac, pokiaľ sám neexportuješ tréning ako súbor. Úplné <a href="privacy.html">zásady ochrany súkromia</a> hovoria to isté podrobnejšie.</p>

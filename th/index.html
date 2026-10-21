@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ สตรีมสดจากสายคาดอก BLE · 5 โซนอัตราการเต้นของหัวใจแยกตามสี</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">อัตราการเต้นหัวใจของคุณ แบบสดในแถบเมนู</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="การสาธิตแบบอินเทอร์แอคทีฟ: ออสซิลโลสโคปคลื่นไฟฟ้าหัวใจและตัวเลื่อนโซนหัวใจ">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">โซน 1: พักผ่อนและฟื้นฟู</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 ปรับอัตราการเต้นของหัวใจ:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 เลื่อนแถบ BPM เพื่อดูคลื่นไฟฟ้าหัวใจเต้นเร็วขึ้นและแถบโซนเปลี่ยนสี</span>
+  </div>
+  <p class="demo-note">การจำลองภาพ ในแอป Mac จริง Thrumline จะเชื่อมต่อกับสายคาดอก Bluetooth LE เพื่อแสดงอัตราการเต้นของหัวใจบนแถบเมนู</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "โซน 1: พักผ่อนและฟื้นฟู";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "โซน 2: แอโรบิกแบบเบา";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "โซน 3: ความทนทานระดับเทมโป";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "โซน 4/5: แอนแอโรบิกระดับสูงสุด";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>แอปมีตัวอย่างสำเร็จรูปติดมาให้ คลิก <em>ดูว่าหน้าตาเป็นอย่างไร</em> แล้วแอปจะเล่นการฝึกความยาวสี่นาที ให้คุณเห็นว่าแอปทำอะไรได้บ้างก่อนซื้อสายวัด ระหว่างที่เล่นจะมีป้ายกำกับชัดเจนตลอดเวลา ค่าที่สร้างขึ้นจึงไม่มีทางถูกเข้าใจผิดว่าเป็นค่าที่วัดได้จริง</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>แอปฟิตเนสบนคลาวด์เทียบกับ Thrumline</h2>
+  <p class="section-lead">ความแม่นยำระดับสายคาดอกบนหน้าจอ Mac ของคุณโดยไม่ต้องสมัครสมาชิกหรือส่งข้อมูลขึ้นคลาวด์</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>คุณสมบัติ</th>
+          <th>แพลตฟอร์มฟิตเนสบนคลาวด์</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>การแสดงผลบนจอ</strong></td>
+          <td>จำกัดอยู่บนหน้าปัดนาฬิกาหรือโทรศัพท์ที่อยู่อีกมุมห้อง</td>
+          <td class="highlight-col"><strong>ไอคอนหัวใจเต้นตามจังหวะจริงพร้อมตัวเลข BPM แยกสีบนแถบเมนู</strong></td>
+        </tr>
+        <tr>
+          <td><strong>ความแม่นยำของเซนเซอร์</strong></td>
+          <td>เซนเซอร์ออปติคัลที่ข้อมือมีอาการดีเลย์เมื่อเปลี่ยนความเร็วการวิ่ง</td>
+          <td class="highlight-col"><strong>ความแม่นยำระดับมาตรฐานสายคาดอก Bluetooth LE (Polar, Garmin)</strong></td>
+        </tr>
+        <tr>
+          <td><strong>โซนหัวใจ</strong></td>
+          <td>สูตรคำนวณอายุที่ตายตัวและล็อกไว้หลังกำแพงค่าบริการรายเดือน</td>
+          <td class="highlight-col"><strong>ปรับแต่งโซนอัตราการเต้นของหัวใจ 5 ระดับได้อย่างอิสระตามสภาพร่างกาย</strong></td>
+        </tr>
+        <tr>
+          <td><strong>การส่งออกข้อมูล</strong></td>
+          <td>ระบบปิดที่คิดค่าบริการเพื่อดาวน์โหลดไฟล์ประวัติการฝึกซ้อม</td>
+          <td class="highlight-col"><strong>ส่งออกประวัติการซ้อมเป็นไฟล์มาตรฐาน CSV หรือ TCX ได้ในคลิกเดียว</strong></td>
+        </tr>
+        <tr>
+          <td><strong>ความเป็นส่วนตัว</strong></td>
+          <td>อัปโหลดข้อมูลสุขภาพส่วนบุคคลขึ้นสู่เซิร์ฟเวอร์คลาวด์ของบริษัท</td>
+          <td class="highlight-col"><strong>ประมวลผลบนเครื่อง 100%: ไม่เชื่อมต่อเน็ต ไม่เก็บประวัติ ไม่มีบัญชี</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>ความเป็นส่วนตัวในย่อหน้าเดียว</h2>
   <p>Thrumline ไม่มีการเข้าถึงเครือข่ายเลย ค่าที่วัดได้ของคุณจึงไม่มีทางออกจาก Mac ได้ แม้แอปจะพยายามก็ตาม ไม่มีบัญชี ไม่มีการวิเคราะห์ และไม่มีการส่งข้อมูลทางไกล การตั้งค่าโซนและเซ็นเซอร์ที่คุณใช้ล่าสุดจะเก็บไว้ในคอนเทนเนอร์แซนด์บ็อกซ์ของแอปเอง ค่าที่วัดแบบสดจะอยู่ในหน่วยความจำเท่านั้นและหายไปเมื่อปิดแอป สิ่งที่เก็บไว้มีเพียงการฝึกที่คุณเลือกบันทึก ซึ่งอยู่ในคอนเทนเนอร์เดียวกัน และคุณลบการฝึกใดก็ได้ในแอป ไม่มีสิ่งใดออกจาก Mac ของคุณ เว้นแต่คุณจะส่งออกการฝึกเป็นไฟล์เอง <a href="privacy.html">นโยบายความเป็นส่วนตัว</a>ฉบับเต็มกล่าวถึงเรื่องเดียวกันนี้อย่างละเอียดกว่า</p>

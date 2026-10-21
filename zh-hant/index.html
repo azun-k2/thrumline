@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ 藍牙胸帶心率感測器即時串流 · 5 種色彩區分的有氧訓練區間</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">你的心率，即時顯示在選單列。</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="互動式演示：即時心電圖示波器與心率區間滑桿">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">區間 1：熱身與放鬆恢復</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 調整心率：</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 拖動心率滑桿觀察心電波形加速跳動，心率區間顏色即時隨之切換</span>
+  </div>
+  <p class="demo-note">此為網頁互動演示。在 Mac 客戶端中，Thrumline 直連 Polar、Garmin 等標準藍牙 LE 胸帶，在選單列即時顯示心跳。</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "區間 1：熱身與放鬆恢復";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "區間 2：低強度基礎有氧";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "區間 3：節奏耐力與乳酸閾";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "區間 4/5：無氧極限與最大攝氧";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>App 內建了一個現成範例。按一下<em>看看效果</em>，App 就會執行一段四分鐘的訓練，讓你在購買心率帶之前就看清它能做什麼。執行期間始終有明確標示，產生的數字絕不會被誤認為真實讀數。</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>雲端健身平台與 Thrumline 的對比</h2>
+  <p class="section-lead">在 Mac 螢幕上直接體驗心率胸帶級的高精度監控，無需按月訂閱或上傳健康數據。</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>特性</th>
+          <th>雲端健身服務</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>常駐電腦螢幕</strong></td>
+          <td>被困在手腕手錶小螢幕或房間另一頭的手錶手機裡</td>
+          <td class="highlight-col"><strong>選單列即時跳動的心臟與有氧區間變色數字，餘光即可一覽</strong></td>
+        </tr>
+        <tr>
+          <td><strong>感測器精度</strong></td>
+          <td>手腕光學感測器在間歇變速劇烈晃動時延遲明顯失真</td>
+          <td class="highlight-col"><strong>支援醫用級高精度的標準藍牙 LE 心率胸帶（佳明、博能等）</strong></td>
+        </tr>
+        <tr>
+          <td><strong>心率區間</strong></td>
+          <td>機械套用年齡公式，且自訂區間被鎖在付費會員之後</td>
+          <td class="highlight-col"><strong>可按個人體能自由微調 5 個心率運動區間，科學指導體能</strong></td>
+        </tr>
+        <tr>
+          <td><strong>數據匯出</strong></td>
+          <td>封閉的數據孤島，對運動原始檔案匯出百般設限甚至收費</td>
+          <td class="highlight-col"><strong>一鍵將任意錄製訓練匯出為通用標準的 CSV 或 TCX 檔案</strong></td>
+        </tr>
+        <tr>
+          <td><strong>隱私安全</strong></td>
+          <td>將極度敏感的個人心臟生理健康數據上傳至企業雲伺服器</td>
+          <td class="highlight-col"><strong>100% 在 Mac 本地離線處理：零網路通訊、零分析埋點、無需註冊</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>一段話說清隱私</h2>
   <p>Thrumline 完全沒有網路存取權限，所以即使 App 想這麼做，你的讀數也無法離開你的 Mac。沒有帳號、沒有分析、沒有遙測。你的區間設定和上次使用的感測器儲存在 App 自己的沙盒容器中。即時讀數只保存在記憶體裡，App 結束後就消失；只有你選擇記錄的訓練才會保留，同樣存放在這個容器中，而且你可以在 App 中刪除其中任何一筆。除非你自己把訓練輸出成檔案，否則任何內容都不會離開你的 Mac。完整的<a href="privacy.html">隱私權政策</a>講的是同樣的事，只是更詳細。</p>

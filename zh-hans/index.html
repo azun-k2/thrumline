@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ 蓝牙胸带心率传感器实时串流 · 5 种色彩区分的有氧训练区间</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">你的心率，实时显示在菜单栏。</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="交互式演示：实时心电图示波器与心率区间滑块">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">区间 1：热身与放松恢复</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 调整心率：</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 拖动心率滑块观察心电波形加速跳动，心率区间颜色实时随之切换</span>
+  </div>
+  <p class="demo-note">此为网页交互演示。在 Mac 客户端中，Thrumline 直连 Polar、Garmin 等标准蓝牙 LE 胸带，在菜单栏实时显示心跳。</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "区间 1：热身与放松恢复";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "区间 2：低强度基础有氧";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "区间 3：节奏耐力与乳酸阈";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "区间 4/5：无氧极限与最大摄氧";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>应用内置了一个现成示例。点击<em>看看效果</em>，应用就会运行一段四分钟的训练，让你在购买心率带之前就看清它能做什么。运行期间始终有明确标注，生成的数字绝不会被误认为真实读数。</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>云端健身平台与 Thrumline 的对比</h2>
+  <p class="section-lead">在 Mac 屏幕上直接体验心率胸带级的高精度监控，无需按月订阅或上传健康数据。</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>特性</th>
+          <th>云端健身服务</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>常驻电脑屏幕</strong></td>
+          <td>被困在手腕手表小屏或房间另一头的手表手机里</td>
+          <td class="highlight-col"><strong>菜单栏实时跳动的心脏与有氧区间变色数字，余光即可一览</strong></td>
+        </tr>
+        <tr>
+          <td><strong>传感器精度</strong></td>
+          <td>手腕光学传感器在间歇变速剧烈晃动时延迟明显失真</td>
+          <td class="highlight-col"><strong>支持医用级高精度的标准蓝牙 LE 心率胸带（佳明、博能等）</strong></td>
+        </tr>
+        <tr>
+          <td><strong>心率区间</strong></td>
+          <td>机械套用年龄公式，且自定义区间被锁在付费会员之后</td>
+          <td class="highlight-col"><strong>可按个人体能自由微调 5 个心率运动区间，科学指导体能</strong></td>
+        </tr>
+        <tr>
+          <td><strong>数据导出</strong></td>
+          <td>封闭的数据孤岛，对运动原始文件导出百般设限甚至收费</td>
+          <td class="highlight-col"><strong>一键将任意录制训练导出为通用标准的 CSV 或 TCX 文件</strong></td>
+        </tr>
+        <tr>
+          <td><strong>隐私安全</strong></td>
+          <td>将极度敏感的个人心脏生理健康数据上传至企业云服务器</td>
+          <td class="highlight-col"><strong>100% 在 Mac 本地离线处理：零网络通信、零分析埋点、无需注册</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>一段话说清隐私</h2>
   <p>Thrumline 完全没有网络访问权限，所以即使应用想这么做，你的读数也无法离开你的 Mac。没有账户、没有分析、没有遥测。你的区间设置和上次使用的传感器保存在应用自己的沙盒容器中。实时读数只保存在内存里，应用退出后就消失；只有你选择记录的训练才会保留，同样存放在这个容器中，而且你可以在应用中删除其中任何一条。除非你自己把训练导出为文件，否则任何内容都不会离开你的 Mac。完整的<a href="privacy.html">隐私政策</a>讲的是同样的事，只是更详细。</p>

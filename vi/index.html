@@ -52,6 +52,7 @@
 <body>
 <main>
 <div class="hero">
+  <div class="hero-pill">⚡ Kết nối dây đeo ngực BLE thời gian thực · 5 vùng nhịp tim phân màu</div>
   <div class="icon"><span>&#9829;</span></div>
   <h1>Thrumline</h1>
   <p class="tagline">Nhịp tim của bạn, trực tiếp trên thanh trình đơn.</p>
@@ -106,6 +107,101 @@
   </details><!-- /family:nav -->
   </nav>
 </div>
+<div class="demo-wrapper" id="demo">
+  <div class="thrumline-stage" role="group" aria-label="Bản demo tương tác: máy hiện sóng ECG và thanh trượt vùng nhịp tim">
+    <div class="thrumline-monitor">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="thrumline-bpm-hero">
+          <span class="thrumline-heart" id="tlHeart">❤️</span>
+          <span class="thrumline-bpm-num" id="tlBpm">74</span>
+          <span style="font-size:15px; font-weight:700; color:var(--muted);">BPM</span>
+        </div>
+        <div class="thrumline-zone-pill" id="tlZone">Vùng 1: Nghỉ ngơi & Hồi phục</div>
+      </div>
+      <canvas id="tlCanvas" width="800" height="90" style="width:100%; height:90px;"></canvas>
+    </div>
+    <div class="zonette-scrubber-bar" style="background:rgba(0,0,0,0.3);">
+      <span>🫀 Điều chỉnh nhịp tim:</span>
+      <input type="range" id="tlSlider" min="50" max="175" value="74" style="flex:1; accent-color:#c5215a;">
+      <strong id="tlSliderVal">74 BPM</strong>
+    </div>
+    <span class="demo-hint">💡 Kéo thanh trượt BPM để xem sóng điện tâm đồ đập nhanh hơn và đổi màu vùng tim</span>
+  </div>
+  <p class="demo-note">Mô phỏng trực quan. Trên ứng dụng Mac, Thrumline kết nối trực tiếp với dây đeo ngực Polar, Garmin, Wahoo qua Bluetooth LE và hiển thị ngay trên thanh menu.</p>
+</div>
+<script>
+(function () {
+  var bpm = 74, canvas = document.getElementById('tlCanvas');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var heart = document.getElementById('tlHeart'), bpmEl = document.getElementById('tlBpm');
+  var zoneEl = document.getElementById('tlZone'), slider = document.getElementById('tlSlider');
+  var sliderVal = document.getElementById('tlSliderVal');
+  var maxPts = 160, waveData = [];
+  for (var i = 0; i < maxPts; i++) waveData.push(45);
+  var beatTimer = 0;
+
+  function updateZone(v) {
+    bpm = parseInt(v, 10);
+    bpmEl.textContent = bpm;
+    sliderVal.textContent = bpm + ' BPM';
+    if (bpm < 95) {
+      zoneEl.textContent = "Vùng 1: Nghỉ ngơi & Hồi phục";
+      zoneEl.style.color = '#5ab3ff'; zoneEl.style.background = 'rgba(90, 179, 255, 0.15)';
+    } else if (bpm < 125) {
+      zoneEl.textContent = "Vùng 2: Hiếu khí nhẹ (Aerobic)";
+      zoneEl.style.color = '#33d69f'; zoneEl.style.background = 'rgba(51, 214, 159, 0.15)';
+    } else if (bpm < 150) {
+      zoneEl.textContent = "Vùng 3: Sức bền Tempo";
+      zoneEl.style.color = '#ffd152'; zoneEl.style.background = 'rgba(255, 209, 82, 0.15)';
+    } else {
+      zoneEl.textContent = "Vùng 4/5: Cường độ tối đa";
+      zoneEl.style.color = '#ff3b68'; zoneEl.style.background = 'rgba(255, 59, 104, 0.2)';
+    }
+  }
+
+  if (slider) slider.addEventListener('input', function() { updateZone(slider.value); });
+
+  function render() {
+    if (!ctx) return;
+    beatTimer += (bpm / 60) * (1 / 60);
+    if (beatTimer >= 1) {
+      beatTimer = 0;
+      if (heart) {
+        heart.classList.add('beat');
+        setTimeout(function() { heart.classList.remove('beat'); }, 130);
+      }
+    }
+    var y = 45;
+    if (beatTimer > 0.05 && beatTimer < 0.11) y = 41;
+    else if (beatTimer >= 0.11 && beatTimer < 0.14) y = 50;
+    else if (beatTimer >= 0.14 && beatTimer < 0.19) y = 10;
+    else if (beatTimer >= 0.19 && beatTimer < 0.23) y = 62;
+    else if (beatTimer >= 0.27 && beatTimer < 0.38) y = 37;
+    else y = 45 + (Math.random() * 2 - 1);
+
+    waveData.shift(); waveData.push(y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(canvas.width, 45); ctx.stroke();
+
+    ctx.strokeStyle = bpm >= 150 ? '#ff3b68' : bpm >= 125 ? '#ffd152' : bpm >= 95 ? '#33d69f' : '#5ab3ff';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    var step = canvas.width / (maxPts - 1);
+    for (var j = 0; j < maxPts; j++) {
+      var px = j * step;
+      if (j === 0) ctx.moveTo(px, waveData[j]);
+      else ctx.lineTo(px, waveData[j]);
+    }
+    ctx.stroke();
+    requestAnimationFrame(render);
+  }
+  updateZone(74);
+  render();
+})();
+</script>
 
 
 <!-- family:shot --><figure class="shot"><img src="../img/hero.jpg" alt="" width="1600" height="860"></figure><!-- /family:shot -->
@@ -135,6 +231,48 @@
   <p>Ứng dụng có sẵn một ví dụ dựng sẵn. Bấm <em>Xem thử trông thế nào</em> và ứng dụng chạy một buổi tập dài bốn phút, để bạn thấy rõ nó làm gì trước khi mua dây đo. Suốt thời gian chạy, ví dụ luôn được ghi chú rõ ràng, nên một con số tạo ra không bao giờ bị nhầm với số đo thật.</p>
 </section>
 
+<section class="card comparison-card" id="comparison">
+  <h2>Nền tảng theo dõi thể thao đám mây so với Thrumline</h2>
+  <p class="section-lead">Đo nhịp tim chính xác từ dây đeo ngực ngay trên bàn làm việc mà không cần tài khoản hay gửi dữ liệu lên mây.</p>
+  <div class="table-scroll">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Đặc tính</th>
+          <th>Ứng dụng theo dõi đám mây</th>
+          <th class="highlight-col">Thrumline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Hiển thị trên máy Mac</strong></td>
+          <td>Bị khóa trên đồng hồ đeo tay hoặc điện thoại ở xa</td>
+          <td class="highlight-col"><strong>Trái tim đập theo nhịp và số BPM đổi màu ngay trên thanh menu</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Độ chính xác cảm biến</strong></td>
+          <td>Cảm biến quang học ở cổ tay dễ bị trễ khi tập biến tốc</td>
+          <td class="highlight-col"><strong>Tương thích dây đeo ngực Bluetooth LE chuẩn y tế (Polar, Garmin)</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Vùng nhịp tim</strong></td>
+          <td>Công thức mặc định cứng nhắc và bắt trả phí thuê bao</td>
+          <td class="highlight-col"><strong>Tùy chỉnh 5 vùng nhịp tim linh hoạt theo thể trạng cá nhân</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Xuất dữ liệu</strong></td>
+          <td>Khóa dữ liệu trong hệ sinh thái riêng, khó xuất file</td>
+          <td class="highlight-col"><strong>Xuất các buổi tập thành file chuẩn CSV hoặc TCX chỉ với 1 cú click</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Quyền riêng tư</strong></td>
+          <td>Tải toàn bộ dữ liệu sinh trắc học cá nhân lên máy chủ đám mây</td>
+          <td class="highlight-col"><strong>Lưu 100% nội bộ trên máy Mac, hoàn toàn không có kết nối mạng</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 <section class="card">
   <h2>Quyền riêng tư trong một đoạn</h2>
   <p>Thrumline hoàn toàn không có quyền truy cập mạng, nên số đo của bạn không thể rời khỏi máy Mac dù ứng dụng có muốn. Không tài khoản, không phân tích, không đo từ xa. Cài đặt vùng và cảm biến bạn dùng gần nhất được lưu trong vùng chứa sandbox riêng của ứng dụng. Số đo trực tiếp chỉ nằm trong bộ nhớ và mất đi khi thoát ứng dụng; chỉ những buổi tập bạn chọn ghi lại mới được giữ, trong cùng vùng chứa đó, và bạn có thể xoá bất kỳ buổi nào ngay trong ứng dụng. Không có gì rời khỏi máy Mac, trừ khi chính bạn xuất một buổi tập ra tệp. <a href="privacy.html">Chính sách quyền riêng tư</a> đầy đủ nói cùng điều đó, chi tiết hơn.</p>
